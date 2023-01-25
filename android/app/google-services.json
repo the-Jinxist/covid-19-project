@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "896115515295",
+    "project_id": "covid-tracker-project-baf91",
+    "storage_bucket": "covid-tracker-project-baf91.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896115515295:android:b0f2bd900351d133dfe7aa",
+        "android_client_info": {
+          "package_name": "com.neo.org.covid_tracker_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "896115515295-p4el7sjrvqs5gftaogfgu946kb8p51d1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAuuFi88nqVA8nA3hqTvB8XX_NWNIIIhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "896115515295-p4el7sjrvqs5gftaogfgu946kb8p51d1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
