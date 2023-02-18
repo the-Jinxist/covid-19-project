@@ -23,6 +23,7 @@ dependencies:
   qr_code_scanner: ^1.0.1
   firebase_core: ^2.4.1
   flutter_local_notifications: ^13.0.0
+  dio: ^5.0.0
 
 dev_dependencies:
   flutter_test:

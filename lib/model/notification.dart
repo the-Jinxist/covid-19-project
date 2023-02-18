@@ -1,7 +1,11 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:covid_tracker_app/model/database.dart';
+import 'package:covid_tracker_app/model/location_model.dart';
 import 'package:covid_tracker_app/model/push_notification.dart';
+import 'package:covid_tracker_app/service_key.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -174,4 +178,57 @@ class NotificationService {
       log("fetchAndUpdatePushNotificationToken() error: $e");
     }
   }
+
+  Future<Map<String, dynamic>> sendNotification() async {
+    try {
+      final locations = await LocationDatabaseProvider().getLocations();
+      locations.removeWhere((element) =>
+          DateTime.parse(element.visitedLocationTile ??
+                  DateTime.now().microsecondsSinceEpoch.toString())
+              .difference(DateTime.now())
+              .inDays <
+          14);
+
+      final data = await sendNotificationToSubscribedTopic(locations);
+      return data;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  final Dio dio = Dio();
+
+  Future<Map<String, dynamic>> sendNotificationToSubscribedTopic(
+      List<Location> locations) async {
+    try {
+      final Response response = await dio.post(
+        "https://fcm.googleapis.com/fcm/send",
+        data: notificationData(locations),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': "key=$serviceKey",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data;
+      } else {
+        throw 'Sorry, an eror occurred!';
+      }
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Map<String, dynamic> notificationData(List<Location> locations) => {
+        'notification': <String, dynamic>{
+          'body': 'You may have been exposed to an infected person',
+          'title': 'COVID-19 Exposure Alert',
+        },
+        'priority': 'high',
+        'data': locations,
+        "to": "/topics/covid-19-exposure"
+      };
 }
