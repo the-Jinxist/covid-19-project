@@ -13,12 +13,24 @@ create table $tableLocation (
   $locationTitle text not null,
   $timeVisitedLocation text not null)
 ''');
+      await db.execute('''
+create table $tableNotification ( 
+  $notificationId integer primary key autoincrement, 
+  $notificationTitle text not null,
+  $notificationDescRow text not null)
+''');
     });
   }
 
-  Future<Location> insert(Location location) async {
+  Future<Location> insertLocation(Location location) async {
     location.id = await db.insert(tableLocation, location.toMap());
     return location;
+  }
+
+  Future<UserNotification> insertNotification(
+      UserNotification notification) async {
+    notification.id = await db.insert(tableNotification, notification.toMap());
+    return notification;
   }
 
   Future<Location?> getLocation(int id) async {
@@ -40,12 +52,20 @@ create table $tableLocation (
     });
   }
 
-  Future<int> delete(int id) async {
+  Future<List<UserNotification>> getNotifications() async {
+    final List<Map<String, dynamic>> maps = await db.query(tableNotification);
+
+    return List.generate(maps.length, (i) {
+      return UserNotification.fromMap(maps[i]);
+    });
+  }
+
+  Future<int> deleteLocation(int id) async {
     return await db
         .delete(tableLocation, where: '$locationId = ?', whereArgs: [id]);
   }
 
-  Future<int> update(Location location) async {
+  Future<int> updateLocation(Location location) async {
     return await db.update(tableLocation, location.toMap(),
         where: '$locationId = ?', whereArgs: [location.id]);
   }

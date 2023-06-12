@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -18,18 +19,18 @@ class NotificationService {
   // Push notifications channel with 30 sec normal notify sound
   static const AndroidNotificationChannel pushChannel =
       AndroidNotificationChannel(
-          'high_importance_channel', // id
-          'High Importance Notifications', // title
-          importance: Importance.high,
-          sound: RawResourceAndroidNotificationSound('notify30secc'));
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    importance: Importance.high,
+  );
 
 // Local notifications channel with low pitch 1 sec notify to represent issues notifications
   static const AndroidNotificationChannel localChannel =
       AndroidNotificationChannel(
-          'medium_importance_channel', // id
-          'Medium Importance Notifications', // title
-          importance: Importance.high,
-          sound: RawResourceAndroidNotificationSound('notify_low_pitch'));
+    'medium_importance_channel', // id
+    'Medium Importance Notifications', // title
+    importance: Importance.high,
+  );
 
   static Future<void> requestNotificationPermission() async {
     final messaging = FirebaseMessaging.instance;
@@ -126,7 +127,7 @@ class NotificationService {
 
     log("_firebaseMessagingForegroundMessageHandler(RemoteMessage) called");
 
-    log("RemoteMessage: ${message.toString()} ${message.notification.toString()} ${message.notification?.title}, ${message.notification?.body}, ${message.data['title']}, ${message.data['body']}, ${message.data}");
+    log("RemoteMessage: ${message.toString()} ${message.notification.toString()} ${message.notification?.title}, ${message.notification?.body}, ${message.data}");
 
     final PushNotification notification = PushNotification(
       title: message.notification?.title,
@@ -156,6 +157,36 @@ class NotificationService {
             presentAlert: true,
           ),
         ));
+
+    try {
+      saveLocations(message);
+    } catch (e) {
+      log("error while saving data: $e");
+    }
+  }
+
+  static Future<void> saveLocations(RemoteMessage message) async {
+    final LocationDatabaseProvider service = LocationDatabaseProvider();
+    await service.open("location3_db.db");
+
+    final LocationsFromPushNotification notificationsFromPush =
+        LocationsFromPushNotification.fromJson(
+            jsonDecode(message.data.toString()));
+
+    String locations = "";
+
+    for (final notif in (notificationsFromPush.locations ?? <Location>[])) {
+      locations += "${notif.title}, ";
+    }
+
+    locations = locations.replaceRange(locations.length - 2, null, "");
+
+    final userNotifications = UserNotification(
+        "Someone has covid symptoms near you",
+        "They visited the following locations: $locations");
+
+    log("user: ${userNotifications.toMap()}");
+    service.insertNotification(userNotifications);
   }
 
   static Future<void> _firebaseMessagingBackgroundHandler(
@@ -163,11 +194,10 @@ class NotificationService {
     // If you're going to use other Firebase services in the background, such as Firestore,
     // make sure you call `initializeApp` before using other Firebase services.
     await Firebase.initializeApp();
-    print("NOTIFICATION BACKGROUND");
 
     log("_firebaseMessagingBackgroundHandler(RemoteMessage) called");
 
-    log("RemoteMessage: ${message.toString()} ${message.notification.toString()} ${message.notification?.title}, ${message.notification?.body}, ${message.data['title']}, ${message.data['body']}, ${message.data}");
+    log("RemoteMessage: ${message.toString()} ${message.notification.toString()} ${message.notification?.title}, ${message.notification?.body}, ${message.data}");
 
     final PushNotification notification = PushNotification(
       title: message.notification?.title,
@@ -177,24 +207,33 @@ class NotificationService {
     );
     final AndroidNotification? android = message.notification?.android;
     flutterLocalNotificationsPlugin.show(
-        // showing notifications in background
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(pushChannel.id, pushChannel.name,
-              channelDescription: pushChannel.description,
-              icon: android!.smallIcon,
-              importance: Importance.max,
-              priority: Priority.high,
-              sound: const RawResourceAndroidNotificationSound('notify30secc')),
-          iOS: const DarwinNotificationDetails(
-              // sound: 'notify30sec.aiff',
-              sound: 'notify30sec.aiff',
-              presentSound: true,
-              presentBadge: true,
-              presentAlert: true),
-        ));
+      // showing notifications in background
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          pushChannel.id,
+          pushChannel.name,
+          channelDescription: pushChannel.description,
+          icon: android!.smallIcon,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(
+          // sound: 'notify30sec.aiff',
+          presentSound: true,
+          presentBadge: true,
+          presentAlert: true,
+        ),
+      ),
+    );
+
+    try {
+      saveLocations(message);
+    } catch (e) {
+      log("error while saving data: $e");
+    }
   }
 
   static Future onDidReceiveLocalNotification(
@@ -219,15 +258,15 @@ class NotificationService {
   Future<Map<String, dynamic>> sendNotification() async {
     try {
       final locationProvider = LocationDatabaseProvider();
-      await locationProvider.open("location2_db.db");
+      await locationProvider.open("location3_db.db");
       final locations = await locationProvider.getLocations();
 
-      locations.removeWhere((element) =>
-          DateTime.parse(element.visitedLocationTile ??
-                  DateTime.now().microsecondsSinceEpoch.toString())
-              .difference(DateTime.now())
-              .inDays <
-          14);
+      // locations.removeWhere((element) =>
+      //     DateTime.parse(element.visitedLocationTile ??
+      //             DateTime.now().microsecondsSinceEpoch.toString())
+      //         .difference(DateTime.now())
+      //         .inDays <
+      //     14);
 
       final data = await sendNotificationToSubscribedTopic(locations);
       return data;
@@ -273,7 +312,9 @@ class NotificationService {
         'priority': 'high',
         // 'to':
         //     'c6yOSbQipEKuoC2TFD3dJS:APA91bHXTXXcEp5E6gZlyKSVaaNQsX9PeeCRvMx9eNy4Sxzke-TeYBcYluetNoV-kHpgtFgI8I1abKjDSB-FyB3esIehDiy0D8a6_V35HKBIkV2C2TqgQA3Mpv4bLW9t-7yQi-y8Uham'
-        // 'data': locations,
+        'data': <String, dynamic>{
+          "\"locations\"": locations.map((e) => e.toMap()).toList(),
+        },
         "to": "/topics/covidexposure"
       };
 }

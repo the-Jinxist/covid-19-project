@@ -2,6 +2,7 @@ import 'package:covid_tracker_app/firebase_options.dart';
 import 'package:covid_tracker_app/model/notification.dart';
 import 'package:covid_tracker_app/view/home_page.dart';
 import 'package:covid_tracker_app/viewmodel/location_viewmodel.dart';
+import 'package:covid_tracker_app/viewmodel/notification_viewmodel.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<LocationViewModel>(
           create: (_) => LocationViewModel(),
+        ),
+        ChangeNotifierProvider<NotificationViewModel>(
+          create: (_) => NotificationViewModel(),
         ),
       ],
       child: MaterialApp(
