@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:covid_tracker_app/model/database.dart';
 import 'package:covid_tracker_app/model/location_model.dart';
 import 'package:covid_tracker_app/model/push_notification.dart';
+import 'package:covid_tracker_app/server_key.dart';
 import 'package:covid_tracker_app/service_key.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -119,7 +120,43 @@ class NotificationService {
     FirebaseMessaging.instance.subscribeToTopic("covid-tracking");
   }
 
-  static void _firebaseMessagingForegroundMessageHandler(RemoteMessage event) {}
+  static void _firebaseMessagingForegroundMessageHandler(
+      RemoteMessage message) {
+    print("Foreground message recieved");
+
+    log("_firebaseMessagingForegroundMessageHandler(RemoteMessage) called");
+
+    log("RemoteMessage: ${message.toString()} ${message.notification.toString()} ${message.notification?.title}, ${message.notification?.body}, ${message.data['title']}, ${message.data['body']}, ${message.data}");
+
+    final PushNotification notification = PushNotification(
+      title: message.notification?.title,
+      body: message.notification?.body,
+      dataTitle: message.data['title'] as String?,
+      dataBody: message.data['body'] as String?,
+    );
+    final AndroidNotification? android = message.notification?.android;
+    flutterLocalNotificationsPlugin.show(
+        // showing notifications in background
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            pushChannel.id,
+            pushChannel.name,
+            channelDescription: pushChannel.description,
+            icon: android!.smallIcon,
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(
+            // sound: 'notify30sec.aiff',
+            presentSound: true,
+            presentBadge: true,
+            presentAlert: true,
+          ),
+        ));
+  }
 
   static Future<void> _firebaseMessagingBackgroundHandler(
       RemoteMessage message) async {
@@ -181,7 +218,10 @@ class NotificationService {
 
   Future<Map<String, dynamic>> sendNotification() async {
     try {
-      final locations = await LocationDatabaseProvider().getLocations();
+      final locationProvider = LocationDatabaseProvider();
+      await locationProvider.open("location2_db.db");
+      final locations = await locationProvider.getLocations();
+
       locations.removeWhere((element) =>
           DateTime.parse(element.visitedLocationTile ??
                   DateTime.now().microsecondsSinceEpoch.toString())
@@ -207,10 +247,12 @@ class NotificationService {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': "key=$serviceKey",
+            'Authorization': "key=$serverKey",
           },
         ),
       );
+
+      log(" response.data: ${response.data}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data;
@@ -218,6 +260,7 @@ class NotificationService {
         throw 'Sorry, an eror occurred!';
       }
     } catch (e) {
+      log("error: ${e.toString()}");
       throw e.toString();
     }
   }
@@ -228,7 +271,9 @@ class NotificationService {
           'title': 'COVID-19 Exposure Alert',
         },
         'priority': 'high',
-        'data': locations,
-        "to": "/topics/covid-19-exposure"
+        // 'to':
+        //     'c6yOSbQipEKuoC2TFD3dJS:APA91bHXTXXcEp5E6gZlyKSVaaNQsX9PeeCRvMx9eNy4Sxzke-TeYBcYluetNoV-kHpgtFgI8I1abKjDSB-FyB3esIehDiy0D8a6_V35HKBIkV2C2TqgQA3Mpv4bLW9t-7yQi-y8Uham'
+        // 'data': locations,
+        "to": "/topics/covidexposure"
       };
 }

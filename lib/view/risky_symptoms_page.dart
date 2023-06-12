@@ -1,3 +1,4 @@
+import 'package:covid_tracker_app/model/notification.dart';
 import 'package:flutter/material.dart';
 
 class RiskySymptomsPage extends StatefulWidget {
@@ -15,7 +16,9 @@ class _RiskySymptomsPageState extends State<RiskySymptomsPage> {
     return Scaffold(
       persistentFooterButtons: [
         InkWell(
-          onTap: () {},
+          onTap: () {
+            NotificationService().sendNotification();
+          },
           child: Container(
             height: 45,
             width: MediaQuery.of(context).size.width,
@@ -39,7 +42,7 @@ class _RiskySymptomsPageState extends State<RiskySymptomsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(
-                height: 50,
+                height: 100,
               ),
               const Text(
                 'Other Symptoms',
@@ -54,7 +57,7 @@ class _RiskySymptomsPageState extends State<RiskySymptomsPage> {
                 height: 10,
               ),
               Text(
-                'Please tell us if you are experiencing any of these features:',
+                'Please tell us if you are experiencing any of these symptoms:',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -100,7 +103,6 @@ class _RiskySymptomsPageState extends State<RiskySymptomsPage> {
                       width: 250,
                       child: Text(
                         'Persistent pain or pressure in the chest',
-                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,
                           color: Colors.black,

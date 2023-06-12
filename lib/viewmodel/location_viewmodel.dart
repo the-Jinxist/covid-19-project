@@ -8,7 +8,7 @@ class LocationViewModel extends ChangeNotifier {
 
   LocationViewModel() {
     _locationProvider = LocationDatabaseProvider();
-    _locationProvider.open("location_db.db");
+    _locationProvider.open("location2_db.db");
   }
 
   Future<Location> putLocation(Location location) async {

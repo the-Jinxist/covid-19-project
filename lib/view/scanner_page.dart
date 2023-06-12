@@ -88,6 +88,7 @@ class _ScannerPageState extends State<ScannerPage> {
             },
           ),
         );
+        controller.dispose();
       },
     );
   }

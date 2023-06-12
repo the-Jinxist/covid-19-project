@@ -15,8 +15,10 @@ class _LocationPageState extends State<LocationPage> {
   void initState() {
     super.initState();
 
-    final locationViewModel = context.read<LocationViewModel>();
-    locationViewModel.getAllLocations();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      final locationViewModel = context.read<LocationViewModel>();
+      locationViewModel.getAllLocations();
+    });
   }
 
   @override
@@ -31,7 +33,7 @@ class _LocationPageState extends State<LocationPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(
-                height: 50,
+                height: 100,
               ),
               const Text(
                 'Past Visited Locations',
@@ -108,6 +110,7 @@ class _LocationPageState extends State<LocationPage> {
                         height: 300,
                         width: MediaQuery.of(context).size.width,
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
                               "You've not scanned any QR codes at any locations",
@@ -116,6 +119,9 @@ class _LocationPageState extends State<LocationPage> {
                                 fontSize: 15,
                                 color: Colors.black.withOpacity(0.8),
                               ),
+                            ),
+                            const SizedBox(
+                              height: 10,
                             ),
                             InkWell(
                               onTap: () {
@@ -127,8 +133,8 @@ class _LocationPageState extends State<LocationPage> {
                                 'Reload',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.greenAccent,
+                                  fontSize: 17,
+                                  color: Colors.green,
                                 ),
                               ),
                             ),
