@@ -12,6 +12,16 @@ class NotificationsPage extends StatefulWidget {
 
 class _NotificationsPageState extends State<NotificationsPage> {
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      final notificationViewModel = context.read<NotificationViewModel>();
+      notificationViewModel.getAllNotifications();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(

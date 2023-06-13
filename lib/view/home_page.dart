@@ -2,9 +2,12 @@ import 'package:covid_tracker_app/view/infected_page.dart';
 import 'package:covid_tracker_app/view/location_page.dart';
 import 'package:covid_tracker_app/view/notifications_page.dart';
 import 'package:covid_tracker_app/view/scanner_page.dart';
+import 'package:covid_tracker_app/viewmodel/location_viewmodel.dart';
+import 'package:covid_tracker_app/viewmodel/notification_viewmodel.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -19,6 +22,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    context.read<LocationViewModel>();
+    context.read<NotificationViewModel>();
 
     FirebaseMessaging.instance.subscribeToTopic("covidexposure");
   }
